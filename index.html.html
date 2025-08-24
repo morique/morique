@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern E-Commerce Site</title>
+  <link rel="stylesheet" href="morique.css">
+  <style>
+    .nav-right {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+    }
+    .nav-right a {
+      margin-left: 10px;
+    }
+    .product {
+      border: 1px solid #ccc;
+      padding: 1em;
+      margin-bottom: 1em;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .product img {
+      width: 100px;
+      height: auto;
+    }
+    .page {
+      display: none;
+      padding: 2em;
+    }
+    .active {
+      display: block;
+    }
+    #card-fields {
+      display: none;
+    }
+    .product.coming-soon {
+      cursor: not-allowed;
+      opacity: 0.7;
+      background: #eee;
+      text-align: center;
+      border-style: dashed;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#" onclick="event.preventDefault(); showPage('home')">Home</a>
+    <a href="#" onclick="event.preventDefault(); showPage('cart')">Cart (<span id="cart-count">0</span>)</a>
+    <a href="#" onclick="event.preventDefault(); showPage('about')">About Us</a>
+    <a href="#" onclick="event.preventDefault(); showPage('policy')">Policy</a>
+  </nav>
+
+  <div id="home" class="page active">
+    <h1>Products</h1>
+    <div class="product" data-name="summary" data-price="35.00">
+      <img src="WhatsApp Image 2025-07-23 at 12.41.34 AM.jpeg" alt="Product A">
+      <h3>summary</h3>
+      <p>LE35.00</p>
+    </div>
+    <div class="product" data-name="vanilla cocnut" data-price="35.00">
+      <img src="WhatsApp Image 2025-07-23 at 1.16.58 AM.jpeg" alt="Product B">
+      <h3>vanilla cocnut</h3>
+      <p>LE35.00</p>
+    </div>
+    <div class="product" data-name="monsieur" data-price="35.00">
+      <img src="WhatsApp Image 2025-07-23 at 1.20.13 AM.jpeg" alt="Product C">
+      <h3>monsieur</h3>
+      <p>LE35.00</p>
+    </div>
+    <div class="product coming-soon">
+      <h3>Coming Soon</h3>
+    </div>
+  </div>
+
+  <div id="cart" class="page">
+    <h1>Your Cart</h1>
+    <div id="cart-items"></div>
+    <div id="total"></div>
+    <br>
+    <button onclick="checkout()">Checkout</button>
+  </div>
+
+  <div id="checkout-page" class="page">
+    <h1>Checkout</h1>
+    <p>Please provide your information and select a payment method:</p>
+    <form action="https://getform.io/f/bjjozjzb" method="POST" onsubmit="return fillOrderDetails()">
+      <label>Full Name:<br><input type="text" name="name" required></label><br><br>
+      <label>Phone Number:<br><input type="tel" name="phone" required></label><br><br>
+      <label>Email:<br><input type="email" name="email" required></label><br><br>
+
+      <label><input type="radio" name="payment-method" value="card" checked onchange="togglePaymentMethod()"> Pay with Card</label><br>
+      <label><input type="radio" name="payment-method" value="cash" onchange="togglePaymentMethod()"> Cash on Delivery</label><br><br>
+
+      <div id="card-fields">
+        <label>Name on Card:<br><input type="text" name="card-name"></label><br><br>
+        <label>Card Number:<br><input type="text" name="card-number"></label><br><br>
+        <label>Expiration Date:<br><input type="text" placeholder="MM/YY" name="card-exp"></label><br><br>
+        <label>CVV:<br><input type="text" name="card-cvv"></label><br><br>
+      </div>
+
+      <input type="hidden" name="order-details" id="order-details">
+
+      <button type="submit">Confirm Payment</button>
+    </form>
+  </div>
+
+  <div id="about" class="page">
+    <h1>About Us</h1>
+    <p>Welcome to morique. We aim to provide the best experience for customers by offering top-quality products and excellent service.</p>
+  </div>
+
+  <div id="policy" class="page">
+    <h1>Privacy & Policy</h1>
+    <p>no exanges or returns.</p>
+  </div>
+
+  <div id="product-detail" class="page">
+    <h1 id="detail-title"></h1>
+    <img id="detail-image" src="" alt="Product Image" style="max-width: 200px;"><br><br>
+    <p id="detail-price"></p>
+    <label>Quantity:<br><input type="number" id="product-quantity" min="1" value="1"></label><br><br>
+    <button onclick="addDetailToCart()">Add to Cart</button>
+  </div>
+
+  <script>
+    const pages = document.querySelectorAll('.page');
+    const cartItemsDiv = document.getElementById('cart-items');
+    const totalDiv = document.getElementById('total');
+    const cartCount = document.getElementById('cart-count');
+    const cardFields = document.getElementById('card-fields');
+    let cart = [];
+
+    function showPage(pageId) {
+      pages.forEach(page => page.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      if (pageId === 'cart') displayCart();
+    }
+
+    function addToCart(product, price) {
+      cart.push({ product, price });
+      alert(`${product} added to cart!`);
+      cartCount.textContent = cart.length;
+    }
+
+    function displayCart() {
+      cartItemsDiv.innerHTML = '';
+      let total = 0;
+      if (cart.length === 0) {
+        cartItemsDiv.innerHTML = '<p>Your cart is empty.</p>';
+        totalDiv.innerHTML = '';
+        return;
+      }
+      const summary = {};
+      cart.forEach(item => {
+        summary[item.product] = (summary[item.product] || 0) + 1;
+        total += item.price;
+      });
+      for (const product in summary) {
+        cartItemsDiv.innerHTML += `<p>${product} x${summary[product]}</p>`;
+      }
+      totalDiv.innerHTML = `<strong>Total: $${total.toFixed(2)}</strong>`;
+    }
+
+    function checkout() {
+      if (cart.length === 0) {
+        alert('Your cart is empty.');
+        return;
+      }
+      showPage('checkout-page');
+      togglePaymentMethod();
+    }
+
+    function togglePaymentMethod() {
+      const method = document.querySelector('input[name="payment-method"]:checked').value;
+      cardFields.style.display = method === 'card' ? 'block' : 'none';
+    }
+
+    function fillOrderDetails() {
+      const summary = {};
+      cart.forEach(item => {
+        summary[item.product] = (summary[item.product] || 0) + 1;
+      });
+      let details = '';
+      for (const product in summary) {
+        details += `${product} x${summary[product]}\n`;
+      }
+      document.getElementById('order-details').value = details.trim();
+      return true;
+    }
+
+    function showProductDetail(product, price, imageSrc) {
+      document.getElementById('detail-title').textContent = product;
+      document.getElementById('detail-price').textContent = `$${price.toFixed(2)}`;
+      document.getElementById('detail-image').src = imageSrc;
+      document.getElementById('detail-image').alt = product;
+      document.getElementById('product-detail').dataset.product = product;
+      document.getElementById('product-detail').dataset.price = price;
+      showPage('product-detail');
+    }
+
+    function addDetailToCart() {
+      const quantity = parseInt(document.getElementById('product-quantity').value);
+      const product = document.getElementById('product-detail').dataset.product;
+      const price = parseFloat(document.getElementById('product-detail').dataset.price);
+      for (let i = 0; i < quantity; i++) {
+        cart.push({ product, price });
+      }
+      cartCount.textContent = cart.length;
+      alert(`${product} x${quantity} added to cart!`);
+      showPage('home');
+    }
+
+    function attachProductClickHandlers() {
+      document.querySelectorAll('.product').forEach(productEl => {
+        // Only attach to products that are not coming soon
+        if (!productEl.classList.contains('coming-soon')) {
+          productEl.addEventListener('click', () => {
+            const product = productEl.dataset.name;
+            const price = parseFloat(productEl.dataset.price);
+            const image = productEl.querySelector('img') ? productEl.querySelector('img').src : '';
+            showProductDetail(product, price, image);
+          });
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', attachProductClickHandlers);
+  </script>
+</body>
+</html>
